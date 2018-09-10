@@ -1,0 +1,51 @@
+---
+  - name: Install required packages
+    apt: name={{ item }} state=present
+    become: yes
+    with_items:
+      - apache2
+      - mysql-server
+      - php
+      - libapache2-mod-php
+      - php-mysql
+      - php-zip
+
+  - name: Install pip requirements
+    pip:
+      name: mysql-python
+
+  - name: copy wordpress.conf file to /etc/apache2/sites-available/
+    template:
+      src: config/wordpress.conf
+      dest: /etc/apache2/sites-available/wordpress.conf
+  
+  - name: Create wordpress directory
+    file:
+      path: /tmp/wordpress
+      state: directory
+
+  - name: uncompress wordpress
+    unarchive:
+      src: https://wordpress.org/latest.tar.gz
+      dest: /tmp/wordpress/
+      remote_src: yes
+  
+  - name: Create .htaccess
+    copy:
+      content: ""
+      dest: /tmp/wordpress/wordpress/.htaccess
+      force: no
+
+  - name: Create Wordpress config file
+    copy:
+      src: /tmp/wordpress/wordpress/wp-config-sample.php
+      dest: /tmp/wordpress/wordpress/wp-config.php
+
+  - name: Copy wordpress to the right location
+    shell: cp -a /tmp/wordpress/wordpress/. /var/www/wordpress
+
+
+  - name: Restart Apache
+    service:
+      name: apache2
+      state: restarted
