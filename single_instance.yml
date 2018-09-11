@@ -4,7 +4,7 @@ Description: 'AWS CloudFormation '
 Parameters:
   S3bucket:
     Type: String
-    Default: ansible-temp-wdef23
+    Default: MyS3bucket
   ImageId:
     Type: String
     Default: "ami-0181f8d9b6f098ec4"
@@ -12,30 +12,20 @@ Parameters:
     Type: AWS::EC2::VPC::Id
     Default: "vpc-1d20387a"
   KeyName:
-    Description: Name of an existing EC2 KeyPair to enable SSH access to the instances
     Type: AWS::EC2::KeyPair::KeyName
-    Default: test-keypair
+    Default: my-test-keypair
   InstanceType:
-    Description: WebServer EC2 instance type
     Type: String
     Default: t2.micro
-    ConstraintDescription: must be a valid EC2 instance type.
   SSHLocation:
     Description: The IP address range that can be used to SSH to the EC2 instances
     Type: String
-    MinLength: '9'
-    MaxLength: '18'
     Default: 0.0.0.0/0
-    AllowedPattern: "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})"
-    ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
-
-  WebServerCapacity:
+  InstanceCount:
     Default: '1'
-    Description: The initial number of WebServer instances
+    Description: The initial number of Instances
     Type: Number
-    MinValue: '1'
-    MaxValue: '5'
-    ConstraintDescription: must be between 1 and 5 EC2 instances.
+
 Resources:
   InstanceInstanceProfile:
     Type: AWS::IAM::InstanceProfile
@@ -62,7 +52,7 @@ Resources:
         Version: 2012-10-17
         Statement:
           - Effect: Allow
-            Action: 's3:*'
+            Action: 's3:GetObject'
             Resource: '*'
       Roles: 
         - !Ref S3ReadRole
@@ -87,11 +77,10 @@ Resources:
         Ref: LaunchConfig
       MinSize: '1'
       MaxSize: '5'
-      DesiredCapacity:
-        Ref: WebServerCapacity
+      DesiredCapacity: !Ref InstanceCount
       Tags:
         - Key: "Name"
-          Value: "Webserver_dev_sec_ops_blog"
+          Value: "MyServerName"
           PropagateAtLaunch: True
       
 
@@ -109,8 +98,7 @@ Resources:
         Fn::Base64: !Sub |
           #!/bin/bash
           apt-get update && apt-get upgrade -y
-          apt-get install python-pip python-dev virtualenv libmysqlclient-dev -y
-          pip install --upgrade pip
+          apt-get install python-dev libmysqlclient-dev python-pip -y
           pip install paramiko ansible awscli
           mkdir -p /home/ubuntu/ansible && aws s3 sync s3://${S3bucket}/ /home/ubuntu/ansible/
           ansible-playbook /home/ubuntu/ansible/playbooks/playbook.yml
