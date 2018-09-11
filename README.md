@@ -12,3 +12,8 @@ Upload the ansible to the bucket :-
 ```
 aws s3 sync ./ansible s3://my-test-bucket-for-ansible
 ```
+
+Then run the cloudformation, and VOILA!:
+```
+aws cloudformation create-stack --stack-name myteststack --template-body file://single_instance.yml --parameters ParameterKey=S3bucket,ParameterValue=my-test-bucket-for-ansible ParameterKey=KeyName,ParameterValue=my-test-keypair --capabilities CAPABILITY_NAMED_IAM
+```
