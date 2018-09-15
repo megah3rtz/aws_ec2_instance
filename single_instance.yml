@@ -25,6 +25,9 @@ Parameters:
     Default: '1'
     Description: The initial number of Instances
     Type: Number
+  InstanceName:
+    Default: 'MyInstance'
+    Type: String
 
 Resources:
   InstanceInstanceProfile:
@@ -80,7 +83,7 @@ Resources:
       DesiredCapacity: !Ref InstanceCount
       Tags:
         - Key: "Name"
-          Value: "MyServerName"
+          Value: !Ref InstanceName
           PropagateAtLaunch: True
       
 
